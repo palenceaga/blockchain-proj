@@ -1,0 +1,9 @@
+{
+  "name": "healthcare-blockchain",
+  "version": "1.0.0",
+  "type": "module",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.7",
+    "hardhat": "^3.16.0"
+  }
+}

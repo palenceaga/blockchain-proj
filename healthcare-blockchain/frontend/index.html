@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Healthcare Blockchain</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.15.0/dist/ethers.umd.min.js"></script>
+  <script src="./app.js" defer></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #172033;
+    }
+
+    header {
+      background: #0f766e;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 25px auto;
+      padding: 0 18px 40px;
+    }
+
+    .wallet-section,
+    .panel {
+      background: white;
+      padding: 22px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    h2 {
+      color: #0f766e;
+      margin-top: 0;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+    }
+
+    .action {
+      padding: 14px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .action:last-child {
+      border-bottom: none;
+    }
+
+    input,
+    textarea,
+    button {
+      width: 100%;
+      padding: 11px;
+      margin-top: 8px;
+      border-radius: 7px;
+      font-size: 15px;
+    }
+
+    input,
+    textarea {
+      border: 1px solid #b8c2cc;
+    }
+
+    button {
+      border: none;
+      background: #0f766e;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #115e59;
+    }
+
+    button:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    .danger {
+      background: #dc2626;
+    }
+
+    .danger:hover {
+      background: #b91c1c;
+    }
+
+    .secondary {
+      background: #334155;
+    }
+
+    .info {
+      overflow-wrap: anywhere;
+      background: #ecfeff;
+      padding: 12px;
+      border-radius: 7px;
+      margin-top: 10px;
+    }
+
+    #status {
+      display: none;
+      padding: 13px;
+      margin: 18px 0;
+      border-radius: 7px;
+      background: #dbeafe;
+      overflow-wrap: anywhere;
+    }
+
+    #auditList {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .audit-entry {
+      background: #f8fafc;
+      border-left: 4px solid #0f766e;
+      padding: 12px;
+      margin-top: 10px;
+      overflow-wrap: anywhere;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    small {
+      color: #64748b;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Healthcare Record Management</h1>
+    <div>Patient-controlled blockchain access</div>
+  </header>
+
+  <main>
+    <section class="wallet-section">
+      <h2>Blockchain Connection</h2>
+
+      <label for="contractAddress">Contract address</label>
+      <input
+        id="contractAddress"
+        type="text"
+        placeholder="Paste the deployed HealthRecords contract address"
+      />
+
+      <button id="saveContractButton" class="secondary">
+        Save Contract Address
+      </button>
+
+      <button id="connectWalletButton">
+        Connect MetaMask
+      </button>
+
+      <div class="info">
+        <strong>Wallet:</strong>
+        <span id="walletAddress">Not connected</span>
+        <br />
+        <strong>Network:</strong>
+        <span id="networkName">Not connected</span>
+      </div>
+    </section>
+
+    <div id="status"></div>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>Administrator</h2>
+
+        <div class="action">
+          <h3>Verify a Doctor</h3>
+          <small>Only the contract administrator can do this.</small>
+
+          <input
+            id="providerAddress"
+            type="text"
+            placeholder="Doctor wallet address"
+          />
+
+          <button id="verifyProviderButton">
+            Verify Doctor
+          </button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Patient</h2>
+
+        <div class="action">
+          <h3>Add Medical Record</h3>
+
+          <label for="medicalFile">Select encrypted medical file</label>
+          <input id="medicalFile" type="file" />
+
+          <input
+            id="recordMetadata"
+            type="text"
+            placeholder="Metadata, for example: Blood test"
+          />
+
+          <button id="anchorRecordButton">
+            Add Record Hash
+          </button>
+        </div>
+
+        <div class="action">
+          <h3>Grant Doctor Access</h3>
+
+          <input
+            id="grantDoctorAddress"
+            type="text"
+            placeholder="Doctor wallet address"
+          />
+
+          <button id="grantAccessButton">
+            Grant Access
+          </button>
+        </div>
+
+        <div class="action">
+          <h3>Revoke Doctor Access</h3>
+
+          <input
+            id="revokeDoctorAddress"
+            type="text"
+            placeholder="Doctor wallet address"
+          />
+
+          <button id="revokeAccessButton" class="danger">
+            Revoke Access
+          </button>
+        </div>
+
+        <div class="action">
+          <h3>Flag Emergency Access</h3>
+
+          <input
+            id="emergencyAccessId"
+            type="number"
+            min="1"
+            placeholder="Emergency access ID"
+          />
+
+          <button id="flagEmergencyButton" class="danger">
+            Flag for Review
+          </button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Doctor</h2>
+
+        <div class="action">
+          <h3>Request Normal Access</h3>
+
+          <input
+            id="requestPatientAddress"
+            type="text"
+            placeholder="Patient wallet address"
+          />
+
+          <button id="requestAccessButton">
+            Request Access
+          </button>
+        </div>
+
+        <div class="action">
+          <h3>Emergency Access</h3>
+
+          <input
+            id="emergencyPatientAddress"
+            type="text"
+            placeholder="Patient wallet address"
+          />
+
+          <textarea
+            id="emergencyReason"
+            rows="3"
+            placeholder="Explain the emergency"
+          ></textarea>
+
+          <button id="emergencyAccessButton" class="danger">
+            Request Emergency Access
+          </button>
+        </div>
+
+        <div class="action">
+          <h3>Log Record Access</h3>
+
+          <input
+            id="accessPatientAddress"
+            type="text"
+            placeholder="Patient wallet address"
+          />
+
+          <input
+            id="accessRecordId"
+            type="number"
+            min="1"
+            placeholder="Record ID"
+          />
+
+          <button id="logAccessButton">
+            Access Record
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>Blockchain Audit Log</h2>
+
+      <button id="refreshAuditButton" class="secondary">
+        Refresh Audit Log
+      </button>
+
+      <div id="auditList">
+        Connect MetaMask to view blockchain events.
+      </div>
+    </section>
+  </main>
+</body>
+</html>
